@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Form Submission
     const contactForm = document.getElementById('contactForm');
     if (contactForm) {
-        contactForm.addEventListener('submit', (e) => {
+        contactForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = contactForm.querySelector('button');
             const originalText = btn.textContent;
@@ -130,12 +130,35 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.textContent = 'Sending...';
             btn.disabled = true;
 
-            setTimeout(() => {
-                alert('Thank you for your message. Our team will contact you shortly.');
-                contactForm.reset();
+            const formData = new FormData(contactForm);
+
+            try {
+                const response = await fetch(contactForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Thank you! Your message has been sent successfully.');
+                    contactForm.reset();
+                } else {
+                    const data = await response.json();
+                    if (data.errors) {
+                        alert(data.errors.map(error => error.message).join(", "));
+                    } else {
+                        alert('Oops! There was a problem submitting your form.');
+                    }
+                }
+            } catch (error) {
+                console.error('Submission Error:', error);
+                alert('Oops! Something went wrong. Please try again later.');
+            } finally {
                 btn.textContent = originalText;
                 btn.disabled = false;
-            }, 1500);
+            }
         });
     }
 
